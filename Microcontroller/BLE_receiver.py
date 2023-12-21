@@ -2,9 +2,12 @@ import pygatt # pygatt is a Python 2.x and 3.x module that allows you to communi
 import binascii # This module contains a number of methods to convert between binary and various ASCII-encoded binary representations.
 import time
 
+pico_uuid = "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
+mac = "d8:3a:dd:5c:49:ab"
+
 #define the MAC address and UUID of the target deviec and characteristic
-MAC = "C4:4F:33:6B:8D:6B" # MAC address is a unique identifier assigned to a Bluetooth device during the manufacturing process.
-UUID = "0000ffe1-0000-1000-8000-00805f9b34fb" # UUID is a 128-bit number used to uniquely identify information.
+MAC = mac # MAC address is a unique identifier assigned to a Bluetooth device during the manufacturing process.
+UUID = pico_uuid # UUID is a 128-bit number used to uniquely identify information.
 
 # define exadecimal command to send
 command_str = "toggle" # toggle is a command to turn on/off the LED
