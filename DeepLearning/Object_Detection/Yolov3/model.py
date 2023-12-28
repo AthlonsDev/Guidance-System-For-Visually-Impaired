@@ -1,5 +1,5 @@
 import torch
-import torch.nn
+import torch.nn as nn
 
 
 #Tuple: (out_channels, kernel_size, stride)
@@ -33,7 +33,7 @@ darknet = [
 ]
 
 class CNNBlock(torch.nn.Module):
-    def __init__(self, in_channels, out_channels, bn_act=True, **kwargs): #bn_act: Batch Normalization and Activation
+    def __init__(self, in_channels, out_channels, bn_act=True, **kwargs): #bn_act: Batch Normalization and Activation, kwargs can be kernel_size, stride, padding
         super().__init__()
         self.conv = torch.nn.Conv2d(in_channels, out_channels, bias=not bn_act, **kwargs) #bias: if bn_act is true, bias is false if bn_act is present bias is unnecessary
         self.bn = torch.nn.BatchNorm2d(out_channels)
@@ -53,7 +53,7 @@ class ResidualBlock(torch.nn.Module):
         for repeat in num_repeats:
             self.layers += [
                 CNNBlock(channels, channels // 2, kernel_size=1), 
-                CNNBlock(channels/2, channels, kernale_size=3, padding=1)
+                CNNBlock(channels/2, channels, kernel_size=3, padding=1)
             ]
 
         self.use_residual = use_residual #If true, the residual block is used
@@ -69,7 +69,7 @@ class ScalePrediction(torch.nn.Module):
         super().__init__()
         self.pred = nn.Sequential(
             CNNBlock(in_channels, 2 * in_channels, kernel_size=3, padding=1),
-            CNNBlock(2*in_channels, 3*(num_classes + 5), bn_act=False, kernale_size=1) #5: x, y, w, h, confidence
+            CNNBlock(2*in_channels, 3*(num_classes + 5), bn_act=False, kernel_size=1) #5: x, y, w, h, confidence
         )
         self.num_classes = num_classes
 
@@ -113,13 +113,13 @@ class Yolov3(torch.nn.Module):
 
         for module in darknet:
             if isinstance(module, tuple):
-                out_channels, kernale_size, stride = module
+                out_channels, kernel_size, stride = module
                 layers.append(CNNBlock(
                     in_channels,
                     out_channels,
-                    kernale_size=kernale_size,
+                    kernel_size=kernel_size,
                     stride=stride,
-                    padding=1 if kernale_size == 3 else 0,
+                    padding=1 if kernel_size == 3 else 0,
                 ))
                 in_channels = out_channels #The output of the previous layer is the input of the next layer
             elif isinstance(module, list):
@@ -130,7 +130,7 @@ class Yolov3(torch.nn.Module):
                 if module == "S":
                     layers += [
                         ResidualBlock(in_channels, use_residual=False, num_repeats=1),
-                        CNNBlock(in_channels, in_channels//2, kernale_size=1),
+                        CNNBlock(in_channels, in_channels//2, kernel_size=1),
                         ScalePrediction(in_channels//2, num_classes=self.num_classes)
                     ]
                 elif module == "U":
