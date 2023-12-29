@@ -16,7 +16,7 @@ darknet = [
     (512, 3, 2),
     ["B", 8],
     (1024, 3, 2),
-    ["B", 4] #To this point is Darknet-53
+    ["B", 4], #To this point is Darknet-53
     (512, 1, 1),
     (1024, 3, 1),
     "S", #S: Scale Prediction -> Predicts the scale of the object
@@ -47,21 +47,23 @@ class CNNBlock(torch.nn.Module):
             return self.conv(x)
 
 class ResidualBlock(torch.nn.Module):
-    def __init__(self, channels, use_residual=True, num_repeats=1): #num_repeats: number of times the block is repeated
+    def __init__(self, channels, user_residual=True, num_repeats=1): #num_repeats: number of times the block is repeated
         super().__init__()
-        self.layers = torch.nn.ModuleList()
-        for repeat in num_repeats:
+        self.layers = nn.ModuleList()
+        for _ in range(num_repeats):
             self.layers += [
-                CNNBlock(channels, channels // 2, kernel_size=1), 
-                CNNBlock(channels/2, channels, kernel_size=3, padding=1)
+                nn.Sequential(
+                    CNNBlock(channels, channels // 2, kernel_size=1), 
+                    CNNBlock(channels // 2, channels, kernel_size=3, padding=1)
+                )
             ]
 
-        self.use_residual = use_residual #If true, the residual block is used
+        self.user_residual = user_residual #If true, the residual block is used
         self.num_repeats = num_repeats #Number of times the block is repeated
     
     def forward(self, x):
         for layer in self.layers:
-           x = layer(x) + x if self.user_residual else layer(x) #If use_residual is true, the residual block is used else the block is not used
+           x = layer(x) + x if self.user_residual else layer(x) #If user_residual is true, the residual block is used else the block is not used
         return x
 
 class ScalePrediction(torch.nn.Module):
@@ -71,7 +73,7 @@ class ScalePrediction(torch.nn.Module):
             CNNBlock(in_channels, 2 * in_channels, kernel_size=3, padding=1),
             CNNBlock(2*in_channels, 3*(num_classes + 5), bn_act=False, kernel_size=1) #5: x, y, w, h, confidence
         )
-        self.num_classes = num_classes
+        self.num_classes = int(num_classes)
 
     def forward(self, x):
         return (
@@ -129,12 +131,24 @@ class Yolov3(torch.nn.Module):
             elif isinstance(module, str):
                 if module == "S":
                     layers += [
-                        ResidualBlock(in_channels, use_residual=False, num_repeats=1),
+                        ResidualBlock(in_channels, user_residual=False, num_repeats=1),
                         CNNBlock(in_channels, in_channels//2, kernel_size=1),
                         ScalePrediction(in_channels//2, num_classes=self.num_classes)
                     ]
+                    in_channels = in_channels // 2 #The output of the previous layer is the input of the next layer
                 elif module == "U":
                     layers.append(torch.nn.Upsample(scale_factor=2))#Upsample the feature map from the previous layer
                     in_channels = in_channels * 3 #concatenate after upsampling
 
         return layers
+    
+if __name__ == "__main__":
+    num_classes = 20
+    IMAGE_SIZE = 416 #yolov1: 448, yolov2: 416, yolov3: 416 (multi-scale training)
+    model = Yolov3(in_channels=3, num_classes=num_classes)
+    x = torch.randn((2, 3, IMAGE_SIZE, IMAGE_SIZE))
+    out = model(x)
+    assert model(x)[0].shape == (2, 3, IMAGE_SIZE//32, IMAGE_SIZE//32, num_classes + 5) #assert first one is shape 2 samples, 3 channels, 13x13 and num_classes + 5 Image_size//32 because of 32 downsampling
+    assert model(x)[1].shape == (2, 3, IMAGE_SIZE//16, IMAGE_SIZE//16, num_classes + 5)
+    assert model(x)[2].shape == (2, 3, IMAGE_SIZE//8, IMAGE_SIZE//8, num_classes + 5)
+    print("Success!")
