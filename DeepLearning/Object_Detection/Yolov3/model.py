@@ -4,7 +4,7 @@ import torch.nn as nn
 
 #Tuple: (out_channels, kernel_size, stride)
 #List: ["B", 1] -> B: Residual Block, 1: Number of repeats
-#darknet architecture
+#darknet architecture yolov3
 darknet = [
     (32, 3, 1),
     (64, 3, 2),
