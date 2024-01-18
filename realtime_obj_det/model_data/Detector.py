@@ -2,6 +2,8 @@ import cv2
 import numpy as np
 from Speech import Speech
 import time
+import threading as th
+
 np.random.seed(20) # set the seed for numpy for reproducibility
 class Detector:
     label = ""
@@ -11,7 +13,8 @@ class Detector:
         self.modelPath = modelPath
         self.classesPath = classesPath
 
-        self.net = cv2.dnn.DetectionModel(self.modelPath, self.configPath)
+        self.net = cv2.dnn.readNetFromTFLite(self.modelPath)
+        # self.net = cv2.dnn.DetectionModel(self.modelPath, self.configPath) # load the model
         self.net.setInputSize(220, 220) # set the input size of the image to 320x320, the lower the faster the inference
         self.net.setInputScale(1.0 / 127.5) # set the input scale to 1/127.5 (255/2)
         self.net.setInputMean((127.5, 127.5, 127.5)) # set the mean of the input to 127.5
@@ -77,9 +80,15 @@ class Detector:
             if len(bboxIdx) != 0: # if there is a detection
                 for i in range(0, len(bboxIdx)): # for each detection 
                     self.label = self.runDetection(bboxIdx, confidences, bboxs, image, classLabelIds, i)
-                    sp = Speech()
-                    self.wait = 10.0
-                    sp.say(f"There is a {self.label} in front of you")
+                    #run speech in a separate thread
+                    speech = Speech()
+                    t = th.Thread(target=speech.say, args=(self.label,))
+                    t.start()
+                    t.join()
+                    print(self.label)
+                    time.sleep(3)
+
+
                     
                 
 

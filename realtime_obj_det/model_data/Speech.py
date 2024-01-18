@@ -1,10 +1,10 @@
 import pyttsx3
-from gtts import gTTS
+# from gtts import gTTS
 from io import BytesIO
 
 
-engine = pyttsx3.init()
-engine.runAndWait() # this is needed to initialize the engine and wait for it to finish initializing
+# engine = pyttsx3.init()
+# engine.runAndWait() # this is needed to initialize the engine and wait for it to finish initializing
 
 class Speech():
     def __init__(self):

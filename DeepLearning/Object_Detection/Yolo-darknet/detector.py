@@ -1,32 +1,42 @@
 import cv2
 import numpy as np
 
+
 print(cv2.__version__)
 
 # get the yolov4 weights and config file from darknet
 net = cv2.dnn.readNet("/home/athlons/Documents/Final_Project/DeepLearning/Object_Detection/Yolo-darknet/darknet/yolov4.weights", "/home/athlons/Documents/Final_Project/DeepLearning/Object_Detection/Yolo-darknet/darknet/cfg/yolov4.cfg")
-classes = []
+
 with open("/home/athlons/Documents/Final_Project/DeepLearning/Object_Detection/Yolo-darknet/darknet/data/coco.names", "r") as f:
-    classes = [line.strip() for line in f.readlines()]
+    classes = f.read().splitlines()
+
+print(classes)
+
+#test model with image
+img = cv2.imread("/home/athlons/Documents/Final_Project/DeepLearning/Object_Detection/Yolo-darknet/darknet/data/dog.jpg")
+height, width, _ = img.shape
+
+# get the names of the output layers
 layer_names = net.getLayerNames()
-output_layers = [layer_names[i[0]-1] for i in net.getUnconnectedOutLayers()]
-colors = np.random.uniform(0, 255, size=(len(classes), 3))
+print(layer_names)
+for i in net.getUnconnectedOutLayers():
+    print(layer_names[i[0]-1])
 
-# Loading image
-img = cv2.imread("room_ser.jpg")
-img = cv2.resize(img, None, fx=0.4, fy=0.4)
-height, width, channels = img.shape
-
-# Detecting objects
+# convert image to blob
 blob = cv2.dnn.blobFromImage(img, 0.00392, (416,416), (0,0,0), True, crop=False)
+
+# set the input for the net
 net.setInput(blob)
+
+# get the output from the net
 outs = net.forward(output_layers)
 
-# Showing informations on the screen
-class_ids = []
+# get the confidence, class id, and bounding box coordinates
 confidences = []
+class_ids = []
 boxes = []
 
+# loop through each output layer and get the confidence, class id, and bounding box coordinates
 for out in outs:
     for detection in out:
         scores = detection[5:]
@@ -44,21 +54,6 @@ for out in outs:
             y = int(center_y - h/2) #Top left y
 
             boxes.append([x, y, w, h])
+
             confidences.append(float(confidence))
             class_ids.append(class_id)
-
-indexes = cv2.dnn.NMSBoxes(boxes, confidences, 0.5, 0.4) #Remove overlapping bounding boxes
-print(indexes)
-font = cv2.FONT_HERSHEY_SIMPLEX
-
-for i in range(len(boxes)):
-    if i in indexes:
-        x, y, w, h = boxes[i] #Coordinates of the bounding box
-        label = str(classes[class_ids[i]]) #Label of the object
-        color = colors[i] #Color of the bounding box
-        cv2.rectangle(img, (x,y), (x+w, y+h), color, 2) #Draw the bounding box
-        cv2.putText(img, label, (x, y+30), font, 1, color, 2) #Write the label of the object
-
-cv2.imshow("Image", img)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
