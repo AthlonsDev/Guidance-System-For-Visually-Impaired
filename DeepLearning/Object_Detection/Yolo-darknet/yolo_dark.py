@@ -1,7 +1,9 @@
 import cv2
 import time
 import threading as th
-from Speech import Speech1
+# from Speech import Speech1
+
+print(cv2.__version__)
 
 CONFIDENCE_THRESHOLD = 0.2
 NMS_THRESHOLD = 0.4
@@ -37,11 +39,11 @@ while cv2.waitKey(1) < 1:
         cv2.rectangle(frame, box, color, 2)
         cv2.putText(frame, label, (box[0], box[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
         print(class_names[classid])
-        speech = Speech()
-        t = th.Thread(target=speech.say, args=(class_names[classid],))
-        t.start()
-        t.join()
-        time.sleep(3)
+        # speech = Speech()
+        # t = th.Thread(target=speech.say, args=(class_names[classid],))
+        # t.start()
+        # t.join()
+        # time.sleep(3)
     end_drawing = time.time()
     
     fps_label = "FPS: %.2f (excluding drawing time of %.2fms)" % (1 / (end - start), (end_drawing - start_drawing) * 1000)
