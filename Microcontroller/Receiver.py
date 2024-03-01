@@ -1,45 +1,60 @@
 import serial
+import serial.serialutil as serialutil
+from queue import Queue
+import threading as th
 import time
 
 # Configure the serial connection
-port = "COM6" 
+port = "dev/ttyACM0"
 #speed of data transfer in bits per second
 bitrate = 115200
 # Open the serial connection, with a set bitrate, and a timeout set to 1.5 seconds, so that the connection is closed if no data is received for 1.5 seconds
-serial_connection = serial.Serial(port, bitrate, timeout=1.5)
+serial_connection = serial.Serial('/dev/ttyACM0', bitrate, timeout=5.5) # Open
 
-# Open a file on your computer to write the received data
-# destination_file = open("/Users/mahmoodshilleh/Desktop/store_info.txt", "wb")
+if not serial_connection.is_open: # Check if the serial connection is open
+    serial_connection.open() # Open the serial connection
 
-# Read and write data until the transfer is complete
-while True:
-    # Read 128 bytes of data from the serial connection
-    data = serial_connection.read(128)
-    if data == b"EOF": # b is for byte string and EOF is the end of file
-        break
-    # wait 1 second before reading again
-    time.sleep(1)
-    # print(data)
-    #convert bytes to string and remove \n and \r
-    newdata = data.decode("utf-8").strip().replace("\n", "").replace("\r", "").split(" ")[0]
-    # print(newdata)
-    if newdata != "": # if data is not empty
-        # convert string to int
-        intdata = int(newdata) # convert string to int
-        # intdata = int(fdata)
-        print(intdata, "cm")
-        #call inference class
+q = Queue()
+def get_distance():
+    if serial_connection.is_open: # Check if the serial connection is open
+        try:
+            data = serial_connection.read(128)  # Read the data from the serial connection up to 128 bytes
+
+            while True:
+                if data == b"EOF": # b is for byte string and EOF is the end of file
+                    break
+            # wait 1 second before reading again
+                # time.sleep(0.001)
+            #convert bytes to string an strip \n and \r
+                newdata = data.split(b'\r')[0]
+                intData = int(newdata)
+                print(intData)
+                # q.put(intData)
+        except serialutil.SerialException:
+            print("couldn read from device") # Print an error message if the data could not be read from the serial connection
+    
+    else:
+        print("Serial port is not open.")
+        #open the connection
         
-        
-    # print(newdata)
 
-
+serial = serial.Serial('/dev/ttyACM0', 9600)
+def read_data():
+    try:
+        data = serial.readline()
+        if data == b"EOF":
+            return -1
+        newdata = data.split(b'\r')[0]
+        #remove b' and ' from the string
+        newdata = str(newdata)[2:-1]
+        intData = int(newdata)
+        # print(intData)
+        if not intData == None:
+            q.put(intData)
+        return intData
+    except serialutil.SerialException:
+        # print("couldn read from device")
+        return -1
 
 # Close the files and serial connection
-# destination_file.close()
 serial_connection.close()
-
-COM6 = serial.Serial('COM6', 9600)
-while True:
-    data = COM6.readline()
-    print(data)
