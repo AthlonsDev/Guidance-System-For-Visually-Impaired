@@ -28,11 +28,9 @@ while True:
         intdata = int(newdata) # convert string to int
         # intdata = int(fdata)
         print(intdata, "cm")
-        # if intdata < 70:
-        #     print("Object is close, activate model ")
-        # else:
-        #     print("Object is far, deactivate model")
-        # print(intdata)
+        #call inference class
+        
+        
     # print(newdata)
 
 
