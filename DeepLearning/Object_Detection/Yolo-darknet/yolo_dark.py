@@ -2,7 +2,7 @@ import cv2
 import time
 import threading as th
 import Speech as sp
-# import Receiver as rc
+import Receiver as rc
 
 print(cv2.__version__)
 
@@ -35,16 +35,13 @@ def say(text):
 distance = 0
 def read_distance():
     q = rc.q
-    # time.sleep(1)
-    t = th.Thread(target=lambda q, arg: (rc.read_data()), args=(q, 2))
-    # t = th.Thread(target=rc.read_data)
-    t.daemon = True
-    t.start()
-    if not q.empty() and not q == None:
-        # print(q.get())
-        return(int(q.get()))
-        # return distance
-    
+    # t = th.Thread(target=lambda q, arg: (rc.read_data()), args=(q, 2))
+    t = th.Thread(target=rc.read_data) # call read_data function from Receiver.py in a new thread
+    t.start() # start the thread
+    # print(q.get())
+    while not q.empty(): # check if the queue is not empty
+        print(q.get()) # print the value in the queue0
+
 
 while cv2.waitKey(1) < 1:
     (grabbed, frame) = vc.read()
@@ -58,19 +55,21 @@ while cv2.waitKey(1) < 1:
     start_drawing = time.time()
 
     # read_distance()
-    # distance = read_distance()
+    distance = read_distance()
+
     try:
-        # if distance > 0 and distance < 100:
-            if len(classes) != 0:
-                classid, score, box = classes[0], scores[0], boxes[0]
-                color = COLORS[int(classid) % len(COLORS)]
-                class_index = int(classid)
-                label = "%s : %f" % (class_names[class_index], score)
-                cv2.rectangle(frame, box, color, 2)
-                cv2.putText(frame, label, (box[0], box[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
-                current_obj = class_names[class_index]
-            #th.Thread(target=say, args=(current_obj,)).start()
+        if len(classes) != 0:
+            classid, score, box = classes[0], scores[0], boxes[0]
+            color = COLORS[int(classid) % len(COLORS)]
+            class_index = int(classid)
+            label = "%s : %f" % (class_names[class_index], score)
+            cv2.rectangle(frame, box, color, 2)
+            cv2.putText(frame, label, (box[0], box[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+            current_obj = class_names[class_index]
+        if distance > 0 and distance < 100:
             print(current_obj + " " + str(distance) + "cm")
+            # sp.speak(current_obj + " " + str(distance) + "cm")
+            # th.Thread(target=say, args=(current_obj,)).start()
     except TypeError:
         print("No object detected")
     
