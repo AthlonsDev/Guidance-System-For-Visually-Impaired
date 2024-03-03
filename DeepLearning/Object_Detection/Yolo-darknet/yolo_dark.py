@@ -2,7 +2,7 @@ import cv2
 import time
 import threading as th
 import Speech as sp
-import Receiver as rc
+# import Receiver as rc
 
 print(cv2.__version__)
 
@@ -12,7 +12,7 @@ COLORS = [(0, 255, 255), (255, 255, 0), (0, 255, 0), (255, 0, 0)]
 
 
 class_names = []
-with open("coco-classes.txt", "r") as f:
+with open("DeepLearning/Object_Detection/Yolo-darknet/coco-classes.txt", "r") as f:
     class_names = [cname.strip() for cname in f.readlines()]
 
 # vc = cv2.VideoCapture("/home/athlons/Documents/Final_Project/realtime_obj_det/test_videos/video-2.mp4")
@@ -21,7 +21,7 @@ focus = 255 #min: 0, max: 255, increment: 5
 # prop = cv2.CAP_PROP_FOCUS
 # vc.set(prop, focus)
 
-net = cv2.dnn.readNet("yolov7-tiny.weights", "yolov7-tiny.cfg")
+net = cv2.dnn.readNet("DeepLearning/Object_Detection/Yolo-darknet/yolov7-tiny.weights", "DeepLearning/Object_Detection/Yolo-darknet/yolov7-tiny.cfg")
 net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
 net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
 
@@ -48,6 +48,7 @@ while cv2.waitKey(1) < 1:
     if not grabbed:
         exit()
 
+    # print("Frame shape: ", frame.shape)
     current_obj = ""
     start = time.time()
     classes, scores, boxes = model.detect(frame, CONFIDENCE_THRESHOLD, NMS_THRESHOLD)
@@ -55,7 +56,7 @@ while cv2.waitKey(1) < 1:
     start_drawing = time.time()
 
     # read_distance()
-    distance = read_distance()
+    # distance = read_distance()
 
     try:
         if len(classes) != 0:
@@ -66,8 +67,20 @@ while cv2.waitKey(1) < 1:
             cv2.rectangle(frame, box, color, 2)
             cv2.putText(frame, label, (box[0], box[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
             current_obj = class_names[class_index]
-        if distance > 0 and distance < 100:
-            print(current_obj + " " + str(distance) + "cm")
+        # if distance > 0 and distance < 100:
+            
+            # to get the position of the object, we can use the box variable
+            #320 is the maximum horizontal size, so that is divided in three parts of
+            box_pos = (box[0] + box[2]) // 2 
+            # print(box_pos)
+            if box_pos <= 183.66:
+                position = "left"
+            elif box_pos >= 300.33:
+                position = "right"
+            elif box_pos <= 300.33 and box_pos >= 183.66:
+                position = "middle"
+            # print(f"{current_obj} is {distance}centimeters away and is on the {position}")
+            print(f"{current_obj} is on the {position}")
             # sp.speak(current_obj + " " + str(distance) + "cm")
             # th.Thread(target=say, args=(current_obj,)).start()
     except TypeError:
