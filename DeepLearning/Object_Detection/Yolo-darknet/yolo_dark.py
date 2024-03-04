@@ -6,9 +6,9 @@ import Speech as sp
 
 print(cv2.__version__)
 
-CONFIDENCE_THRESHOLD = 0.2
-NMS_THRESHOLD = 0.4
-COLORS = [(0, 255, 255), (255, 255, 0), (0, 255, 0), (255, 0, 0)]
+CONFIDENCE_THRESHOLD = 0.5 #Confidence treshold, lowering it will aloow more objects detected but at lower accuracy
+NMS_THRESHOLD = 0.5 #Non-maximum suppression threshold, lowering it will allow more boxes to be drawn, but at lower accuracy
+COLORS = [(0, 255, 255), (255, 255, 0), (0, 255, 0), (255, 0, 0)] #Colors for the boxes
 
 
 class_names = []
@@ -20,8 +20,8 @@ vc = cv2.VideoCapture(0)
 focus = 255 #min: 0, max: 255, increment: 5
 # prop = cv2.CAP_PROP_FOCUS
 # vc.set(prop, focus)
-
-net = cv2.dnn.readNet("DeepLearning/Object_Detection/Yolo-darknet/yolov7-tiny.weights", "DeepLearning/Object_Detection/Yolo-darknet/yolov7-tiny.cfg")
+net = cv2.dnn.readNetFromDarknet("DeepLearning/Object_Detection/Yolo-darknet/yolov7-tiny.cfg", "DeepLearning/Object_Detection/Yolo-darknet/yolov7-tiny.weights")
+# net = cv2.dnn.readNet("DeepLearning/Object_Detection/Yolo-darknet/yolov7-tiny.weights", "DeepLearning/Object_Detection/Yolo-darknet/yolov7-tiny.cfg")
 net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
 net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
 
@@ -68,10 +68,9 @@ while cv2.waitKey(1) < 1:
             cv2.putText(frame, label, (box[0], box[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
             current_obj = class_names[class_index]
         # if distance > 0 and distance < 100:
-            
-            # to get the position of the object, we can use the box variable
-            #320 is the maximum horizontal size, so that is divided in three parts of
-            box_pos = (box[0] + box[2]) // 2 
+            # to get the position of the object, i will use the box variable
+            #320 is the maximum horizontal size from left to right, so that is divided in three parts of
+            box_pos = (box[0] + box[2]) // 2 # get the x position of the box by adding the x and width and dividing by 2
             # print(box_pos)
             if box_pos <= 183.66:
                 position = "left"
