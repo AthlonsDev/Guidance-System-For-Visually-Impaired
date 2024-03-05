@@ -2,7 +2,7 @@ import cv2
 import time
 import threading as th
 import Speech as sp
-# import Receiver as rc
+import Receiver as rc
 
 print(cv2.__version__)
 
@@ -30,7 +30,8 @@ model.setInputParams(size=(125, 125), scale=1/255, swapRB=True)
 
 def say(text):
     print(text)
-    sp.speak(text)
+    t = th.Thread(target=sp.speak, args=(text,))
+    t.start()
 
 distance = 0
 def read_distance():
@@ -40,7 +41,8 @@ def read_distance():
     t.start() # start the thread
     # print(q.get())
     while not q.empty(): # check if the queue is not empty
-        print(q.get()) # print the value in the queue0
+        # print(q.get()) # print the value in the queue0
+        return q.get() # return the value in the queue
 
 
 while cv2.waitKey(1) < 1:
@@ -56,7 +58,7 @@ while cv2.waitKey(1) < 1:
     start_drawing = time.time()
 
     # read_distance()
-    # distance = read_distance()
+    distance = read_distance()
 
     try:
         if len(classes) != 0:
@@ -72,16 +74,16 @@ while cv2.waitKey(1) < 1:
             #320 is the maximum horizontal size from left to right, so that is divided in three parts of
             box_pos = (box[0] + box[2]) // 2 # get the x position of the box by adding the x and width and dividing by 2
             # print(box_pos)
-            if box_pos <= 183.66:
+            if box_pos <= 200.66:
                 position = "left"
             elif box_pos >= 300.33:
                 position = "right"
-            elif box_pos <= 300.33 and box_pos >= 183.66:
+            elif box_pos <= 300.33 and box_pos >= 200.66:
                 position = "middle"
             # print(f"{current_obj} is {distance}centimeters away and is on the {position}")
-            print(f"{current_obj} is on the {position}")
-            # sp.speak(current_obj + " " + str(distance) + "cm")
-            # th.Thread(target=say, args=(current_obj,)).start()
+            if not distance == None:
+                print(f"{current_obj} is on the {position} at {distance}cm")
+                say(f"{current_obj} is on the {position} at {distance} centimeters")
     except TypeError:
         print("No object detected")
     

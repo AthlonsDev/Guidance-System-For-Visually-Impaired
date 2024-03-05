@@ -38,7 +38,7 @@ def get_distance():
         print("Serial port is not open.")
         #open the connection
         serial_connection.open()
-        
+
 
 serial = serial.Serial('/dev/ttyACM0', 9600)
 def read_data():
@@ -52,15 +52,13 @@ def read_data():
         newdata = str(newdata)[2:-1]
         try:
             intData = int(newdata)
-            # print(intData)
             q.put(intData)
             return intData
         except ValueError:
             return 0
     except serialutil.SerialException:
-        # print("couldn read from device")
+        print("couldn read from device")
         return 0
-
 
 # Close the files and serial connection
 serial_connection.close()
