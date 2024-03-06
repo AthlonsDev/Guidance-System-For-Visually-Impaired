@@ -2,7 +2,7 @@ import cv2
 import time
 import threading as th
 import Speech as sp
-import Receiver as rc
+# import Receiver as rc
 
 print(cv2.__version__)
 
@@ -21,7 +21,6 @@ focus = 255 #min: 0, max: 255, increment: 5
 # prop = cv2.CAP_PROP_FOCUS
 # vc.set(prop, focus)
 net = cv2.dnn.readNetFromDarknet("DeepLearning/Object_Detection/Yolo-darknet/yolov7-tiny.cfg", "DeepLearning/Object_Detection/Yolo-darknet/yolov7-tiny.weights")
-# net = cv2.dnn.readNet("DeepLearning/Object_Detection/Yolo-darknet/yolov7-tiny.weights", "DeepLearning/Object_Detection/Yolo-darknet/yolov7-tiny.cfg")
 net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
 net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
 
@@ -58,7 +57,7 @@ while cv2.waitKey(1) < 1:
     start_drawing = time.time()
 
     # read_distance()
-    distance = read_distance()
+    # distance = read_distance()
 
     try:
         if len(classes) != 0:
