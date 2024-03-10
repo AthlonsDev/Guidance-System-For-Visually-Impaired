@@ -1,4 +1,5 @@
 import cv2
+import numpy as np
 import time
 import threading as th
 import Speech as sp
@@ -61,28 +62,26 @@ while cv2.waitKey(1) < 1:
 
     try:
         if len(classes) != 0:
-            classid, score, box = classes[0], scores[0], boxes[0]
-            color = COLORS[int(classid) % len(COLORS)]
-            class_index = int(classid)
-            label = "%s : %f" % (class_names[class_index], score)
-            cv2.rectangle(frame, box, color, 2)
-            cv2.putText(frame, label, (box[0], box[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
-            current_obj = class_names[class_index]
-        # if distance > 0 and distance < 100:
-            # to get the position of the object, i will use the box variable
-            #320 is the maximum horizontal size from left to right, so that is divided in three parts of
-            box_pos = (box[0] + box[2]) // 2 # get the x position of the box by adding the x and width and dividing by 2
-            # print(box_pos)
-            if box_pos <= 200.66:
-                position = "left"
-            elif box_pos >= 300.33:
-                position = "right"
-            elif box_pos <= 300.33 and box_pos >= 200.66:
-                position = "middle"
+            for (classid, score, box) in zip(classes, scores, boxes):
+                color = COLORS[int(classid) % len(COLORS)]
+                class_index = int(classid)
+                label = "%s : %f" % (class_names[class_index], score)
+                cv2.rectangle(frame, box, color, 2)
+                cv2.putText(frame, label, (box[0], box[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+                current_obj = class_names[class_index]
+                box_pos = (box[0] + box[2]) // 2 # get the x position of the box by adding the x and width and dividing by 2
+                # print(box_pos)
+                if box_pos <= 200.66:
+                    position = "left"
+                elif box_pos >= 300.33:
+                    position = "right"
+                elif box_pos <= 300.33 and box_pos >= 200.66:
+                    position = "middle"
             # print(f"{current_obj} is {distance}centimeters away and is on the {position}")
             if not distance == None:
-                print(f"{current_obj} is on the {position} at {distance}cm")
-                say(f"{current_obj} is on the {position} at {distance} centimeters")
+                print("center: ", center)
+                # print(f"{current_obj} is on the {position} at {distance}cm")
+                # say(f"{current_obj} is on the {position} at {distance} centimeters")
     except TypeError:
         print("No object detected")
     

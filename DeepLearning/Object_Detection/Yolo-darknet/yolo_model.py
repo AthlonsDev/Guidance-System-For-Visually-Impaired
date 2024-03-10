@@ -18,22 +18,36 @@ class YoloModel:
         self.load_model()
 
     def load_model(self):
-        self.net = cv2.dnn.readNet(self.model_path, self.config_path)
+        self.net = cv2.dnn.readNetFromDarknet(self.config_path, self.model_path)
         self.classes = []
         with open(self.labels_path, "r") as f:
             self.classes = [line.strip() for line in f.readlines()]
+        print(self.classes)
         self.layer_names = self.net.getLayerNames()
-        self.output_layers = [self.layer_names[i[0]-1] for i in self.net.getUnconnectedOutLayers()]
+        unconnected_out_layers = self.net.getUnconnectedOutLayers()
+        if unconnected_out_layers.ndim > 1:
+            self.output_layers = [self.layer_names[i[0]-1] for i in unconnected_out_layers]
+        else:
+            self.output_layers = [self.layer_names[unconnected_out_layers[0]-1]]
         self.colors = np.random.uniform(0, 255, size=(len(self.classes), 3))
+        self.net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
+        self.net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
+
+        
 
     def detect_objects(self, image):
+        model = cv2.dnn_DetectionModel(self.net)
+        model.setInputParams(size=(125, 125), scale=1/255, swapRB=True)
         height, width, channels = image.shape
         blob = cv2.dnn.blobFromImage(image, 0.00392, (416,416), (0,0,0), True, crop=False)
         self.net.setInput(blob)
+        
         outs = self.net.forward(self.output_layers)
         class_ids = []
         confidences = []
         boxes = []
+        class_ids, confidences, boxes = model.detect(image, self.confidence_threshold, self.nms_threshold)
+
         for out in outs:
             for detection in out:
                 scores = detection[5:]
@@ -52,6 +66,8 @@ class YoloModel:
 
                     boxes.append([x, y, w, h])
 
+                    print("Class ID: ", class_id, "Confidence: ", confidence, "position: ", center_x)
+
                     confidences.append(float(confidence))
                     class_ids.append(class_id)
         indexes = cv2.dnn.NMSBoxes(boxes, confidences, self.confidence_threshold, self.nms_threshold)
@@ -63,9 +79,10 @@ class YoloModel:
             if i in indexes:
                 x, y, w, h = boxes[i]
                 label = str(self.classes[class_ids[i]])
+                confidence = str(int(confidences[i]*100))
                 color = self.colors[i]
                 cv2.rectangle(image, (x,y), (x+w, y+h), color, 2)
-                cv2.putText(image, label, (x, y+30), font, 1, color, 2)
+                cv2.putText(image, confidence, (x, y+30), font, 1, color, 2)
         return image
     
     def detect_and_draw(self, image):
@@ -86,16 +103,12 @@ class YoloModel:
         cv2.destroyAllWindows()
 
 if __name__ == "__main__":
-    model_path = "darknet/yolov4.weights"
-    config_path = "darknet/yolov4.cfg"
-    labels_path = "coco.names"
-    image_path = "room_ser.jpg"
-    video_path = "video.mp4"
+    model_path = "DeepLearning/Object_Detection/Yolo-darknet/yolov7-tiny.weights"
+    config_path = "DeepLearning/Object_Detection/Yolo-darknet/yolov7-tiny.cfg"
+    labels_path = "DeepLearning/Object_Detection/Yolo-darknet/coco.names"
+    image_path = "DeepLearning/Object_Detection/Yolo-darknet/dogs.jpeg"
+    video_path = 0
     yolo = YoloModel(model_path, config_path, labels_path)
-    image = cv2.imread(image_path)
-    image = cv2.resize(image, None, fx=0.4, fy=0.4)
-    image = yolo.detect_and_draw(image)
-    cv2.imshow("Image", image)
+    yolo.detect_and_draw_video(video_path)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-    yolo.detect_and_draw_video(video_path)
