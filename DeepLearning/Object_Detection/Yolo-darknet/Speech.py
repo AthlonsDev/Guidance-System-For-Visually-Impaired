@@ -1,37 +1,28 @@
-import pyttsx3
-from gtts import gTTS
-from io import BytesIO
+# from dimits import Dimits
+# import time
+# dt = Dimits("voice-en-us-amy-low")
 
-engine = pyttsx3.init()
-engine.setProperty('rate', 150) # setting up new voice rate, the speed of the voice
-engine.setProperty('volume', 1.0) # setting up volume level  between 0 and 1
-voices = engine.getProperty('voices') #getting details of current voice, get the voice property 
-engine.setProperty('voice', voices[11].id)
+# def say(text):
+#     # Initialize Dimits with the desired voice model
 
-def speak(text):
+#     # Convert text to audio and play it using the aplay engine
+#     dt.text_2_speech(text, engine="aplay")
 
-    engine.say(text)
     
-    if engine._inLoop:
-        engine.endLoop()
-    else:
-        engine.runAndWait()
 
-class Speech():
-    def __init__(self):
-        self.engine = pyttsx3.init()
-        self.engine.setProperty('rate', 100) # setting up new voice rate, the speed of the voice
-        self.engine.setProperty('volume', 1.0) # setting up volume level  between 0 and 1
-        voices = self.engine.getProperty('voices') #getting details of current voice, get the voice property 
-        self.engine.setProperty('voice', 'mb-en1')
 
-    def say(self, text):
-        self.engine.say(text)
-        self.engine.runAndWait()
+# if "__main__" == __name__:
+#     say("hello, world")
 
-class TextToSpeech():
-    def speak(self, text):
-        tts = gTTS(text=text, lang="en")
-        fp = BytesIO()
-        tts.write_to_fp(fp)
+import piper as pi
 
+model_path = "/home/athlons/piper/piper/models/piper-tts-1.0.0.onnx"
+config_path = "/home/athlons/piper/piper/configs/piper-tts-1.0.0.yaml"
+use_cuda = False
+
+def say(text):
+    voice = pi.PiperVoice(self, model_path, config_path, use_cuda)
+    voice.synthesize_stream_raw(text, speaker_id=0, length_scale=1.0, noise_scale=0.0, noise_w=0.0, sentence_silence=0.0)
+
+if "__main__" == __name__:
+    say("hello, world")
