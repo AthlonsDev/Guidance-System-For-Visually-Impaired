@@ -12,21 +12,30 @@ NMS_THRESHOLD = 0.5 #Non-maximum suppression threshold, lowering it will allow m
 COLORS = [(0, 255, 255), (255, 255, 0), (0, 255, 0), (255, 0, 0)] #Colors for the boxes
 
 
-class_names = []
-with open("DeepLearning/Object_Detection/Yolo-darknet/coco-classes.txt", "r") as f:
-    class_names = [cname.strip() for cname in f.readlines()]
 
-# vc = cv2.VideoCapture("/home/athlons/Documents/Final_Project/realtime_obj_det/test_videos/video-2.mp4")
-vc = cv2.VideoCapture(0)
-focus = 255 #min: 0, max: 255, increment: 5
-# prop = cv2.CAP_PROP_FOCUS
-# vc.set(prop, focus)
-net = cv2.dnn.readNetFromDarknet("DeepLearning/Object_Detection/Yolo-darknet/yolov7-tiny.cfg", "DeepLearning/Object_Detection/Yolo-darknet/yolov7-tiny.weights")
-net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
-net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
+def get_classnames(labels_path):
+    class_names = []
+    with open(labels_path, "r") as f:
+        class_names = [cname.strip() for cname in f.readlines()]
+    return class_names
 
-model = cv2.dnn_DetectionModel(net)
-model.setInputParams(size=(125, 125), scale=1/255, swapRB=True)
+def setup_camera(video_input):
+    vc = cv2.VideoCapture(0) 
+    # in jetson this is more complex - it needs to load gstreamer
+    return vc
+
+def load_model(weight_path, config_path):
+    net = cv2.dnn.readNetFromDarknet(config_path, weight_path)
+    net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
+    net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
+    return net
+
+
+def pre_processing(net) :
+    model = cv2.dnn_DetectionModel(net)
+    model.setInputParams(size=(125, 125), scale=1/255, swapRB=True)
+    return model
+
 
 def say(text):
     print(text)
@@ -44,50 +53,63 @@ def read_distance():
         # print(q.get()) # print the value in the queue0
         return q.get() # return the value in the queue
 
+def detect_objects(vc, model, class_names):
 
-while cv2.waitKey(1) < 1:
-    (grabbed, frame) = vc.read()
-    if not grabbed:
-        exit()
 
-    # print("Frame shape: ", frame.shape)
-    current_obj = ""
-    start = time.time()
-    classes, scores, boxes = model.detect(frame, CONFIDENCE_THRESHOLD, NMS_THRESHOLD)
-    end = time.time()
-    start_drawing = time.time()
 
-    # read_distance()
-    # distance = read_distance()
+    while cv2.waitKey(1) < 1:
+        (grabbed, frame) = vc.read()
+        if not grabbed:
+            exit()
 
-    try:
-        if len(classes) != 0:
-            for (classid, score, box) in zip(classes, scores, boxes):
-                color = COLORS[int(classid) % len(COLORS)]
-                class_index = int(classid)
-                label = "%s : %f" % (class_names[class_index], score)
-                cv2.rectangle(frame, box, color, 2)
-                cv2.putText(frame, label, (box[0], box[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
-                current_obj = class_names[class_index]
-                box_pos = (box[0] + box[2]) // 2 # get the x position of the box by adding the x and width and dividing by 2
-                # print(box_pos)
-                if box_pos <= 200.66:
-                    position = "left"
-                elif box_pos >= 300.33:
-                    position = "right"
-                elif box_pos <= 300.33 and box_pos >= 200.66:
-                    position = "middle"
-            # print(f"{current_obj} is {distance}centimeters away and is on the {position}")
-            if not distance == None:
-                print("center: ", center)
-                # print(f"{current_obj} is on the {position} at {distance}cm")
-                # say(f"{current_obj} is on the {position} at {distance} centimeters")
-    except TypeError:
-        print("No object detected")
-    
+        # print("Frame shape: ", frame.shape)
+        current_obj = ""
+        start = time.time()
+        classes, scores, boxes = model.detect(frame, CONFIDENCE_THRESHOLD, NMS_THRESHOLD)
+        end = time.time()
+        start_drawing = time.time()
 
-    end_drawing = time.time()
-    
-    # fps_label = "FPS: %.2f " % (1 / (end - start), (end_drawing - start_drawing) * 1000)
-    # cv2.putText(frame, fps_label, (0, 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
-    cv2.imshow("detections", frame)
+        # read_distance()
+        # distance = read_distance()
+
+        try:
+            if len(classes) != 0:
+                for (classid, score, box) in zip(classes, scores, boxes):
+                    color = COLORS[int(classid) % len(COLORS)]
+                    class_index = int(classid)
+                    label = "%s : %f" % (class_names[class_index], score)
+                    cv2.rectangle(frame, box, color, 2)
+                    cv2.putText(frame, label, (box[0], box[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+                    current_obj = class_names[class_index]
+                    box_pos = (box[0] + box[2]) // 2 # get the x position of the box by adding the x and width and dividing by 2
+                    # print(box_pos)
+                    if box_pos <= 200.66:
+                        position = "left"
+                    elif box_pos >= 300.33:
+                        position = "right"
+                    elif box_pos <= 300.33 and box_pos >= 200.66:
+                        position = "middle"
+                # print(f"{current_obj} is {distance}centimeters away and is on the {position}")
+                if not distance == None:
+                    print(f"{current_obj} is on the {position} at {distance}cm")
+                    # say(f"{current_obj} is on the {position} at {distance} centimeters")
+        except TypeError:
+            print("No object detected")\
+            
+        end_drawing = time.time()
+        # fps_label = "FPS: %.2f " % (1 / (end - start), (end_drawing - start_drawing) * 1000)
+        # cv2.putText(frame, fps_label, (0, 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
+        cv2.imshow("detections", frame)
+
+if __name__ == "__main__":
+    weight_path = "DeepLearning/Object_Detection/Yolo-darknet/yolov7-tiny.weights"
+    config_path = "DeepLearning/Object_Detection/Yolo-darknet/yolov7-tiny.cfg"
+    labels_path = "DeepLearning/Object_Detection/Yolo-darknet/coco-classes.txt"
+    video_input = 0
+
+    class_names = get_classnames(labels_path)
+    net = load_model(weight_path, config_path)
+    model = pre_processing(net)
+    video = setup_camera(video_input)
+    detect_objects(video, model, class_names)
+
