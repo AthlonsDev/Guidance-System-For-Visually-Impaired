@@ -36,9 +36,9 @@ class YoloModel:
         
 
     def detect_objects(self, image):
-        model = cv2.dnn_DetectionModel(self.net)
-        model.setInputParams(size=(125, 125), scale=1/255, swapRB=True)
-        height, width, channels = image.shape
+        # model = cv2.dnn_DetectionModel(self.net)
+        # model.setInputParams(size=(125, 125), scale=1/255, swapRB=True)
+        # height, width, channels = image.shape
         blob = cv2.dnn.blobFromImage(image, 0.00392, (416,416), (0,0,0), True, crop=False)
         self.net.setInput(blob)
         
@@ -46,7 +46,7 @@ class YoloModel:
         class_ids = []
         confidences = []
         boxes = []
-        class_ids, confidences, boxes = model.detect(image, self.confidence_threshold, self.nms_threshold)
+        # class_ids, confidences, boxes = model.detect(image, self.confidence_threshold, self.nms_threshold)
 
         for out in outs:
             for detection in out:
@@ -109,6 +109,7 @@ if __name__ == "__main__":
     image_path = "DeepLearning/Object_Detection/Yolo-darknet/dogs.jpeg"
     video_path = 0
     yolo = YoloModel(model_path, config_path, labels_path)
-    yolo.detect_and_draw_video(video_path)
+    # yolo.detect_and_draw_video(video_path)
+    yolo.detect_and_draw(image_path)
     cv2.waitKey(0)
     cv2.destroyAllWindows()

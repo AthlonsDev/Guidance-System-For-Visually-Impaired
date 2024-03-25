@@ -2,8 +2,9 @@ import cv2
 import numpy as np
 import time
 import threading as th
-import Speech as sp
+import Speech_online as sp
 # import Receiver as rc
+import img2text as it
 
 print(cv2.__version__)
 
@@ -26,8 +27,8 @@ def setup_camera(video_input):
 
 def load_model(weight_path, config_path):
     net = cv2.dnn.readNetFromDarknet(config_path, weight_path)
-    net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
-    net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
+    net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
+    net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
     return net
 
 
@@ -53,14 +54,27 @@ def read_distance():
         # print(q.get()) # print the value in the queue0
         return q.get() # return the value in the queue
 
+def take_pic(vc):
+    value, frame = vc.read()
+    cv2.imwrite(f"DeepLearning/Object_Detection/Yolo-darknet/pic.jpg", frame)
+    run_img_to_text(f"DeepLearning/Object_Detection/Yolo-darknet/pic.jpg")
+
+def run_img_to_text(pic_path):
+    it.img_to_text(pic_path)
+
+
 def detect_objects(vc, model, class_names):
-
-
-
-    while cv2.waitKey(1) < 1:
+    # camer keeps running until user presses 'q'
+    while True:
         (grabbed, frame) = vc.read()
         if not grabbed:
             exit()
+
+        if cv2.waitKey(1) == ord('c'):
+            take_pic(vc)
+            print("Picture taken")
+            continue
+            # say("Picture taken
 
         # print("Frame shape: ", frame.shape)
         current_obj = ""
@@ -91,11 +105,13 @@ def detect_objects(vc, model, class_names):
                         position = "middle"
                 # print(f"{current_obj} is {distance}centimeters away and is on the {position}")
                 if not distance == None:
-                    print(f"{current_obj} is on the {position} at {distance}cm")
+                    # print(f"{current_obj} is on the {position} at {distance}cm")
                     # say(f"{current_obj} is on the {position} at {distance} centimeters")
+                    pass
         except TypeError:
             print("No object detected")\
             
+        # say(f'{current_obj}')
         end_drawing = time.time()
         # fps_label = "FPS: %.2f " % (1 / (end - start), (end_drawing - start_drawing) * 1000)
         # cv2.putText(frame, fps_label, (0, 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
