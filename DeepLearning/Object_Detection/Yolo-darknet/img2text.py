@@ -9,4 +9,3 @@ def img_to_text(pic_path):
     result = caption[0]['generated_text']
     print(result)
     sp.speak(result)
-

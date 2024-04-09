@@ -2,13 +2,13 @@ import cv2
 import numpy as np
 import time
 import threading as th
-import Speech_online as sp
-# import Receiver as rc
-import img2text as it
+import Speech as sp
+import Receiver as rc
+# import img2text as it
 
 print(cv2.__version__)
 
-CONFIDENCE_THRESHOLD = 0.5 #Confidence treshold, lowering it will aloow more objects detected but at lower accuracy
+CONFIDENCE_THRESHOLD = 0.6 #Confidence treshold, lowering it will aloow more objects detected but at lower accuracy
 NMS_THRESHOLD = 0.5 #Non-maximum suppression threshold, lowering it will allow more boxes to be drawn, but at lower accuracy
 COLORS = [(0, 255, 255), (255, 255, 0), (0, 255, 0), (255, 0, 0)] #Colors for the boxes
 
@@ -22,7 +22,6 @@ def get_classnames(labels_path):
 
 def setup_camera(video_input):
     vc = cv2.VideoCapture(0) 
-    # in jetson this is more complex - it needs to load gstreamer
     return vc
 
 def load_model(weight_path, config_path):
@@ -65,7 +64,7 @@ def run_img_to_text(pic_path):
 
 def detect_objects(vc, model, class_names):
     # camer keeps running until user presses 'q'
-    while True:
+    while cv2.waitKey(1) < 1:
         (grabbed, frame) = vc.read()
         if not grabbed:
             exit()
@@ -78,13 +77,10 @@ def detect_objects(vc, model, class_names):
 
         # print("Frame shape: ", frame.shape)
         current_obj = ""
-        start = time.time()
         classes, scores, boxes = model.detect(frame, CONFIDENCE_THRESHOLD, NMS_THRESHOLD)
-        end = time.time()
-        start_drawing = time.time()
 
         # read_distance()
-        # distance = read_distance()
+        distance = read_distance()
 
         try:
             if len(classes) != 0:
@@ -104,15 +100,13 @@ def detect_objects(vc, model, class_names):
                     elif box_pos <= 300.33 and box_pos >= 200.66:
                         position = "middle"
                 # print(f"{current_obj} is {distance}centimeters away and is on the {position}")
-                if not distance == None:
-                    # print(f"{current_obj} is on the {position} at {distance}cm")
+                if not distance == None and distance < 100:
+                    print(f"{current_obj} is on the {position} at {distance}cm")
                     # say(f"{current_obj} is on the {position} at {distance} centimeters")
                     pass
         except TypeError:
             print("No object detected")\
             
-        # say(f'{current_obj}')
-        end_drawing = time.time()
         # fps_label = "FPS: %.2f " % (1 / (end - start), (end_drawing - start_drawing) * 1000)
         # cv2.putText(frame, fps_label, (0, 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
         cv2.imshow("detections", frame)
@@ -128,4 +122,5 @@ if __name__ == "__main__":
     model = pre_processing(net)
     video = setup_camera(video_input)
     detect_objects(video, model, class_names)
+
 

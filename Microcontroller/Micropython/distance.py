@@ -23,6 +23,9 @@ def ultra():
     
     #distance stores the result of equation. journey(timepassed) times the speed of sound(323,2 m/s) divided by 2
     distance = (timepassed * 0.0343) / 2
+
+    #round the distance to integer value
+    distance = round(distance)
     
     #print("the distance from object is ", distance, "cm")
     print(distance)

@@ -59,6 +59,12 @@ def read_data():
     except serialutil.SerialException:
         print("couldn read from device")
         return 0
+    
+if __name__ == "__main__":
+    while True:
+        print(read_data())
+        # print(q.get())
+        # print(get_distance
 
 # Close the files and serial connection
 serial_connection.close()
