@@ -13,7 +13,6 @@ NMS_THRESHOLD = 0.5 #Non-maximum suppression threshold, lowering it will allow m
 COLORS = [(0, 255, 255), (255, 255, 0), (0, 255, 0), (255, 0, 0)] #Colors for the boxes
 
 
-
 def get_classnames(labels_path):
     class_names = []
     with open(labels_path, "r") as f:
@@ -21,13 +20,13 @@ def get_classnames(labels_path):
     return class_names
 
 def setup_camera(video_input):
-    vc = cv2.VideoCapture(0) 
+    vc = cv2.VideoCapture(video_input) 
     return vc
 
 def load_model(weight_path, config_path):
     net = cv2.dnn.readNetFromDarknet(config_path, weight_path)
-    net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
-    net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
+    net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA) # set the backend to CUDA if available
+    net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA) # set the target to CUDA if available
     return net
 
 
@@ -93,19 +92,19 @@ def detect_objects(vc, model, class_names):
                     current_obj = class_names[class_index]
                     box_pos = (box[0] + box[2]) // 2 # get the x position of the box by adding the x and width and dividing by 2
                     # print(box_pos)
-                    if box_pos <= 200.66:
-                        position = "left"
-                    elif box_pos >= 300.33:
-                        position = "right"
-                    elif box_pos <= 300.33 and box_pos >= 200.66:
-                        position = "middle"
+                    # if box_pos <= 200.66:
+                    #     position = "left"
+                    # elif box_pos >= 300.33:
+                    #     position = "right"
+                    # elif box_pos <= 300.33 and box_pos >= 200.66:
+                    #     position = "middle"
                 # print(f"{current_obj} is {distance}centimeters away and is on the {position}")
                 if not distance == None and distance < 100:
-                    print(f"{current_obj} is on the {position} at {distance}cm")
-                    # say(f"{current_obj} is on the {position} at {distance} centimeters")
+                    # print(f"{current_obj} is at {distance} cm")
+                    say(f"Careful, {current_obj} is at {distance} centimeters")
                     pass
         except TypeError:
-            print("No object detected")\
+            print("No object detected")
             
         # fps_label = "FPS: %.2f " % (1 / (end - start), (end_drawing - start_drawing) * 1000)
         # cv2.putText(frame, fps_label, (0, 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)

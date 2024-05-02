@@ -4,8 +4,6 @@ engine = pyttsx3.init()
 engine.setProperty('rate', 100) # setting up new voice rate, the speed of the voice
 engine.setProperty('volume', 1.0) # setting up volume level  between 0 and 1
 voices = engine.getProperty('voices') #getting details of current voice, get the voice property 
-engine.setProperty('voice', 'mb-en1')
-
 def speak(text):
 
     engine.say(text)
@@ -26,10 +24,4 @@ class Speech():
     def say(self, text):
         self.engine.say(text)
         self.engine.runAndWait()
-
-class TextToSpeech():
-    def speak(self, text):
-        tts = gTTS(text=text, lang="en")
-        fp = BytesIO()
-        tts.write_to_fp(fp)
 
